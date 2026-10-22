@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "EWMSC Hospital Extensions",
-  "short_name": "EWMSC Extensions",
+  "name": "MAX EXTENSIONS",
+  "short_name": "MAX EXTENSIONS",
   "description": "Search the EWMSC hospital extension directory and tap to call departments.",
   "start_url": "./",
   "scope": "./",
