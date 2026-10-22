@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Search the EWMSC hospital extension directory and tap to call departments.">
+<meta name="theme-color" content="#0a7a5a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="EWMSC Extensions">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<title>EWMSC Extensions</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#14181f;--mut:#6b7380;--ac:#0a7a5a;--acx:#fff;--bd:#e3e6ea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1b2027;--tx:#eef1f5;--mut:#9aa3af;--ac:#2fbf94;--acx:#07241b;--bd:#2a313b}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1b2027;--tx:#eef1f5;--mut:#9aa3af;--ac:#2fbf94;--acx:#07241b;--bd:#2a313b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:14px 14px 10px;z-index:5}
+h1{font-size:18px;margin:0 0 2px}
+.sub{font-size:12px;color:var(--mut);margin-bottom:10px}
+input{width:100%;padding:13px 14px;font-size:16px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);outline:none}
+input:focus{border-color:var(--ac)}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
+.chip.on{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+button.st{background:none;border:0;font-size:22px;color:var(--ac);padding:4px 6px;cursor:pointer;line-height:1}
+.lead{display:flex;align-items:center;gap:6px;min-width:0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tb{display:flex;gap:6px}
+.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);padding-top:8px}
+.meta a{color:var(--ac);font-weight:600;text-decoration:none;font-size:13px}
+#add{display:flex;gap:6px;padding-top:10px}
+#add[hidden]{display:none}
+#add input{padding:10px;font-size:15px;min-width:0}
+#add button{background:var(--ac);color:var(--acx);border:0;border-radius:10px;font-weight:600;padding:0 14px;cursor:pointer}
+button.del{background:none;border:0;font-size:18px;padding:4px 6px;cursor:pointer}
+.credit{text-align:center;color:var(--mut);font-size:12px;padding:0 14px 28px}
+#list{padding:0 14px 30px}
+.row{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.nm{font-size:15px;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.nm small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.btns{display:flex;gap:6px;flex-shrink:0}
+a.call{background:var(--ac);color:var(--acx);text-decoration:none;font-weight:600;font-size:14px;padding:9px 13px;border-radius:10px;white-space:nowrap}
+.empty{text-align:center;color:var(--mut);padding:30px}
+</style></head><body>
+<header><div class="top"><h1>📞 Hospital Extensions</h1><div class="tb"><button id="tg" class="ib" aria-label="Theme">🌓</button></div></div>
+<div class="sub">Dial 225-4673 followed by the extension for the specific department</div>
+<input id="q" type="search" placeholder="Search name or extension…" autocomplete="off"><div id="chips"></div><div class="meta"><span id="cnt"></span></div></header>
+<div id="list"></div>
+<div class="credit">Made by Sameer Manwah™ · © 2026</div>
+<script>
+var MAIN="2254673";
+var RAW=`AAW a|3530
+AAW b|3531
+ACW1|2444
+ACW2 b|2571
+ACW3|2289
+Adult Admitting Ward|3035/3031
+Adult Med 1|2576
+Adult Thoracic Ward|3729
+AED|2265
+AED Radiology|2272
+AICU a|2626
+AICU b|2648
+AMW1 a|2444
+AMW1 b|2576
+AMW2 a|2753
+AMW2 b|2470
+AMW3|3712
+AMW3 b|2581
+AMW4|2540
+AMW4 (b)|2542
+AMW5 a|2576
+AMW5 b|2585
+AMW6 b|3507
+AMW7 b|3712
+Anaesthetic Lounge|2715
+Aniesha Housekeeping|3966331
+Antenatal ward (MHWH)|13041
+APCF 1|2266
+APCF 2|2283
+APCF X-RAY|2272
+ASW1|2628
+ASW1 b|2629
+ASW2 b|2464
+ASW3 b|2684
+ASW4-A|3502
+ASW4 b|3503
+ASW5|2806
+ASW5 Nurses Office|2807
+ATW a|3730
+ATW/Thoracic|3729
+BanYan Centre|5820
+Bed Bureau|2088
+Bed Bureau Cellphone|3833214
+Biochemistry Lab b|2227
+Biomed|5605
+Biomed stores|5615
+Blood Bank|2235
+Blood Bank*|2003
+Blood Bank (OP)|2059
+Business Manager|5088
+Cardio 2|2571
+Cardio 3|2289
+Caribbean Heart Care a|2751
+Caribbean Heart Care b|2709
+C Arm For OT|2272
+Cath Lab a|2354
+Cath Lab b|2351
+CEO Secretary|2490
+Chest Clinic a|2196
+Chest Clinic b|2012
+Civil Engineering|5611
+Clinical Stores|5616
+Commercial Stores|2391
+Complex Administrator|2194
+Consultation Room|2151
+Corp. Communication|2569
+CSPD|2383
+CT Room|2161
+CT Room (2)|2173
+Customer Service AED|2200
+CVSD|2843
+Cytology|2327
+Day Medical Centre|3504
+Dean's office|5026
+Dental Hospital|4004
+Dental Stores|4110
+Dietician|3022
+Dietician (2)|3019
+Dietician (3)|3020
+Echo|2050
+ECHO a|2062
+ECHO b|2063
+Echo/ECG/NIL|2050
+EEG|3626
+Endoscopy|2411
+Engineering Planning|5609
+ENT OPC|2122
+ENT Treatment Centre|3506
+ENT Ward|2754
+Escort Manager|8687547345
+Escort Services a|2431
+Escort Services b|2263
+Escorts - Radiology|2429
+File Room|2103/2104
+Fluoro|2180
+Food Stores|5555
+Gyne ward (MHWH)|13042
+Haematology Lab|2247
+Haemodialysis|2567
+Haemodialysis (2)|2558
+HDU a|2766
+HDU b|2777
+Hibiscus a|3629
+Hibiscus b|2598
+Histology|2341
+HIV nurses|4111
+HR Doctors Schedule|2403
+Human Resources (complex)|2400
+Human Resources (Dentistry location)|2404
+Immunology|2223
+Immunology Lab|2222
+Immunology UWI|4292
+Industrial Med|2143
+Industrial relations|2596
+Infection Control|2021
+Inventory|5617
+IT|3023
+JBF a|3719
+JBF b (Nurse's side)|3720
+Kavita Housekeeping|7351027
+Lab Stores|2259
+Legal a|5076
+Legal b|2523
+Mantoux Test|2014
+Med 1|2576
+Med 2|2753
+Med 3|3712
+Medical chief of staff|2197
+Medical Day Unit (MDU)|3504
+Medical Records a|2094
+Medical Records b|2512
+Medical Records c|2103
+Medical Records d|2104
+Medical Social Worker|2137
+Medicine Office|2924
+MHWH b|6624585
+MHWH c|2253041
+MHWH (New Number)|2264694
+Microbiology Lab a|2220
+Miss Calystra Nelson HR|2405
+Molecular Biology|2239
+MRI|2171
+MRI Appointment|2183
+Msw|3037
+National Radiotherapy Centre|6251295
+NIL- stress testing|2062
+North Gate Security|5520
+NOTU|2580
+Nursing Manager|2516
+Nutrition (PICU)|3024
+OPC (ENT/plastics/Uro) a|2122
+OPC (ENT/plastics/Uro) b|2123
+Operating theatre (admissions)|2379
+Operating Theatre (Business Manager)|2367
+Operating Theatre (Head Nurses)|2368
+Operating Theatre (Recovery)|2380
+Ophthal OPC|2149
+Ophthal Ward|2754
+Ophthal Ward a|2756
+Outpatient Pharmacy Chest (Adult)|2091
+PACS|2172
+Paediatric Medical Records|2593
+Paediatric Inpatient Pharmacy|3039
+Paediatric Office a|3909
+Paediatric Office b|3915
+Paediatric Outpatient Pharmacy|3040
+Paeds clinic Clerks|2488
+Paeds Filing Room|3309
+Paeds Social Worker|3002
+Paeds Surg Office|2978
+Paed surgery clinic|3042
+Palliative care|6624053
+Pathology Banyan|5847
+Payroll a|2038
+Payroll b|3060
+PD Unit|2570
+PED a|3113
+PED b|3114
+Peds clinic back|3004
+Ped X-ray|3105
+Pharmacy (Inpatient)|5058
+Pharmacy (Outpatient)|2084
+Pharmacy (Paeds)|3039
+Phlebotomy|2243
+Physiotherapy|2037
+PICU a|3062
+PICU b|3063
+Planning|5084
+Planning (2)|5822
+Plaster Techs|2115
+PMW1 b (nurses side)|3521
+PMW1 Doctors Line|3520
+PMW2 (Doctor's side)|3718
+PMW2 Nurses Side|3717
+POC lab|2287
+Property Management|2527
+PSW a paediatric surgical ward|3512
+PSW b (Nurse's side)|3513
+Purchasing head Office|5042
+Quality department|2117/5070
+Radiology Consult Room|2192
+Radiology reports a|2613
+Radiology reports b|2164
+Real Med 1|2576
+Real Microbiology Lab b|2221
+Real Social Worker A|2137
+Reports Collection|2232
+Reynolds Housekeeping|7874202
+Same Day Surgery|2748
+Sample Collection|3301
+Security Services|3058
+Social Worker|2135
+Social Worker B|2349
+SOPC (Gen sx, Neuro Sx, Vasc Sx) a|2146
+SOPC (Gen sx, Neuro Sx, Vasc Sx) b|2147
+SOPC head nurse|2189
+SOPC (Ortho) a|2114
+SOPC (Ortho) b|2115
+Staff Health Unit|3807
+Stat lab|2047
+Surg 1|2628
+Surg 2|2464
+Surg 3|3061/2681
+Surg 4|3502
+Surg 5|2806
+Surgery Office|2974
+Transport|5530
+Transport Manager Mr Mohammed|4664063
+Transport Supervisor David|3938520
+Ultrasound|2184
+Ultrasound/MRI a|2184
+Ultrasound/MRI b|2158
+UWI Mrs Paterson-Coombs|5022
+Veterinary Hospital|4302
+Ward clerk|2103
+Women's Hospital|2264694
+Workshop|5602
+X ray department|2180`;
+var D=RAW.split("\n").map(function(l){var p=l.split("|");return{n:p[0],e:p[1].split("/")}});
+var CATS={Wards:/ward|\bAMW|\bASW|\bACW|\bPMW|\bPSW|\bATW|HDU|ICU|Hibiscus|JBF|^Surg \d|^Med \d|^PED|NOTU|Antenatal|Gyne|Haemodialysis/i,Pharmacy:/pharmacy/i,Labs:/\blab\b|patholog|histology|cytology|haematology|immunology|molecular|blood bank|phlebotomy|sample|POC|biochem/i,Imaging:/radiolog|x.?ray|MRI|CT room|ultrasound|PACS|fluoro|echo|EEG|cath|AED/i,Admin:/manager|\bHR\b|human resources|payroll|legal|CEO|administrator|planning|purchasing|inventory|stores|^IT$|security|transport|engineering|property|quality|dean|records|housekeeping|escort|industrial|business|secretary|communication|workshop|biomed|civil/i};
+function cat(n){for(var k in CATS)if(CATS[k].test(n))return k;return"Other"}
+D.forEach(function(d){d.c=cat(d.n)});
+function ld(k){try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var FAV=ld("fav"),REC=ld("rec"),F="All";
+var TABS=["All","★ Favorites","Recent","Wards","Labs","Imaging","Pharmacy","Admin","Other"];
+function chips(){document.getElementById("chips").innerHTML=TABS.map(function(t){return '<button class="chip'+(t===F?' on':'')+'" data-t="'+t+'">'+t+'</button>'}).join("")}
+var L=document.getElementById("list"),Q=document.getElementById("q");
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function render(){
+ var t=Q.value.trim().toLowerCase(),h="";
+ var r=D.filter(function(d){
+  if(F==="★ Favorites"&&FAV.indexOf(d.n)<0)return false;
+  if(F==="Recent"&&REC.indexOf(d.n)<0)return false;
+  if(TABS.indexOf(F)>2&&d.c!==F)return false;
+  return !t||d.n.toLowerCase().indexOf(t)>-1||d.e.join(" ").indexOf(t)>-1});
+ if(F==="Recent")r.sort(function(a,b){return REC.indexOf(a.n)-REC.indexOf(b.n)});
+ else r.sort(function(a,b){return (FAV.indexOf(b.n)>-1)-(FAV.indexOf(a.n)>-1)});
+ document.getElementById("cnt").textContent=r.length+" of "+D.length+" shown";
+ r.forEach(function(d){
+  var fv=FAV.indexOf(d.n)>-1;
+  h+='<div class="row"><div class="lead"><button class="st" data-n="'+esc(d.n)+'" aria-label="Favorite">'+(fv?'★':'☆')+'</button><div class="nm">'+esc(d.n)+'<small>'+d.c+'</small></div></div><div class="btns">';
+  d.e.forEach(function(e){
+   var direct=e.length>=6;
+   var href="tel:"+(direct?e:MAIN+",,"+e);
+   h+='<a class="call" data-n="'+esc(d.n)+'" href="'+href+'">'+(direct?"📱 ":"📞 ")+e+'</a>';
+  });
+  h+='</div></div>';
+ });
+ L.innerHTML=h||'<div class="empty">No matches</div>';
+}
+Q.addEventListener("input",render);
+document.getElementById("chips").addEventListener("click",function(ev){var c=ev.target.closest(".chip");if(!c)return;F=c.getAttribute("data-t");chips();render()});
+L.addEventListener("click",function(ev){
+ var s=ev.target.closest("button.st");
+ if(s){var n=s.getAttribute("data-n"),i=FAV.indexOf(n);if(i<0)FAV.push(n);else FAV.splice(i,1);sv("fav",FAV);render();return}
+ var a=ev.target.closest("a.call");
+ if(a){var m=a.getAttribute("data-n"),j=REC.indexOf(m);if(j>-1)REC.splice(j,1);REC.unshift(m);REC=REC.slice(0,15);sv("rec",REC)}
+});
+var root=document.documentElement;
+function applyTheme(t){if(t)root.setAttribute("data-theme",t);else root.removeAttribute("data-theme")}
+try{applyTheme(localStorage.getItem("th"))}catch(e){}
+document.getElementById("tg").onclick=function(){var cur=root.getAttribute("data-theme")||(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");var nx=cur==="dark"?"light":"dark";applyTheme(nx);try{localStorage.setItem("th",nx)}catch(e){}};
+chips();render();
+
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function (err) { console.warn('Offline support could not be enabled:', err); }); });
+}
+</script></body></html>
